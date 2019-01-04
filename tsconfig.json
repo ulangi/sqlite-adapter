@@ -1,0 +1,19 @@
+{
+ "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es6"],
+    "noImplicitAny": true,
+    "declaration": true,
+    "strictNullChecks": true,
+    "strict": true,
+    "noEmitOnError": true,
+    "sourceMap": true,
+    "sourceRoot": "src",
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
+

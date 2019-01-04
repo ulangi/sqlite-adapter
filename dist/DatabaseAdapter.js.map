@@ -1,0 +1,1 @@
+{"version":3,"file":"DatabaseAdapter.js","sourceRoot":"src/","sources":["DatabaseAdapter.ts"],"names":[],"mappings":";;AAAA,2EAAuE;AACvE,6DAAyD;AAGzD,MAAa,eAAe;IAEnB,cAAc,CACnB,YAA4D;QAE5D,IAAI,YAAY,KAAK,6BAA6B,EAAC;YACjD,OAAO,IAAI,qDAAyB,EAAE,CAAA;SACvC;aACI;YACH,OAAO,IAAI,uCAAkB,EAAE,CAAA;SAChC;IACH,CAAC;CAEF;AAbD,0CAaC"}
