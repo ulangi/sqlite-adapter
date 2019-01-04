@@ -1,5 +1,5 @@
 {
-  "name": "sqlite-adapter",
+  "name": "@minhloi/sqlite-adapter",
   "version": "1.0.1",
   "description": "",
   "main": "dist/index.js",
