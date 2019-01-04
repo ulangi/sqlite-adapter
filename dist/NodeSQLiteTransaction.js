@@ -17,7 +17,7 @@ class NodeSQLiteTransaction extends Transaction_1.Transaction {
     executeSql(statement, params) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
-                this.db.all(statement, params, (error, rows) => {
+                this.db.run(statement, params, (error) => {
                     if (error) {
                         reject(error);
                     }

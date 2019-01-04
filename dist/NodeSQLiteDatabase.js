@@ -31,7 +31,9 @@ class NodeSQLiteDatabase extends SQLiteDatabase_1.SQLiteDatabase {
                         scope(new NodeSQLiteTransaction_1.NodeSQLiteTransaction(this.db));
                         this.db.run("COMMIT", (error) => {
                             if (error) {
-                                reject(error);
+                                this.db.run("ROLLBACK", () => {
+                                    reject(error);
+                                });
                             }
                             else {
                                 resolve();
