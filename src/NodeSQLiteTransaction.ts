@@ -12,7 +12,7 @@ export class NodeSQLiteTransaction extends Transaction {
   public executeSql(statement: string, params?: any[] ): Promise<Transaction> {
     return new Promise(async(resolve, reject) => {
       try {
-        this.db.all(statement, params, (error, rows) => {
+        this.db.run(statement, params, (error) => {
           if (error){
             reject(error)
           }

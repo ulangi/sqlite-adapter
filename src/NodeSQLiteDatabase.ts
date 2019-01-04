@@ -28,7 +28,9 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
             scope(new NodeSQLiteTransaction(this.db))
             this.db.run("COMMIT", (error) => {
               if (error){
-                reject(error)
+                this.db.run("ROLLBACK", () => {
+                  reject(error)
+                })
               }
               else {
                 resolve()
