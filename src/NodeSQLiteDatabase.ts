@@ -1,4 +1,4 @@
-import * as sqlite3 from "sqlite3"
+import { Database as NodeDatabase } from "sqlite3"
 import { SQLiteDatabase } from "./SQLiteDatabase"
 import { NodeSQLiteTransaction } from "./NodeSQLiteTransaction"
 import { Transaction } from "./Transaction"
@@ -6,12 +6,18 @@ import { Result } from "./Result"
 
 export class NodeSQLiteDatabase extends SQLiteDatabase {
 
-  private db!: sqlite3.Database
+  private db!: NodeDatabase
+
+  public constructor(
+    private engine: { Database: new (name: string) => NodeDatabase }
+  ){
+    super()
+  }
 
   public open(name: string): Promise<void>{
     return new Promise(async(resolve, reject) => {
       try {
-        this.db = new sqlite3.Database(name)
+        this.db = new this.engine.Database(name)
         resolve()
       }
       catch(error){
