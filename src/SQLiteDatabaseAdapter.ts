@@ -2,7 +2,7 @@ import { SQLiteDatabase } from "./SQLiteDatabase"
 import { ReactNativeSQLiteDatabase } from "./ReactNativeSQLiteDatabase"
 import { NodeSQLiteDatabase } from "./NodeSQLiteDatabase"
 
-export abstract class SQLiteDatabaseAdapter {
+export class SQLiteDatabaseAdapter {
 
   public constructor(
     private engine: any
