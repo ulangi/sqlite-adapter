@@ -2,12 +2,14 @@ import { Database as NodeDatabase } from "sqlite3"
 import { SQLiteDatabase } from "./SQLiteDatabase"
 import { NodeSQLiteTransaction } from "./NodeSQLiteTransaction"
 import { Transaction } from "./Transaction"
+import { ConnectionOptions } from "./ConnectionOptions"
 import { Result } from "./Result"
 
 export class NodeSQLiteDatabase extends SQLiteDatabase {
 
   private db!: NodeDatabase
   private name!: string
+  private options!: ConnectionOptions
 
   public constructor(
     private engine: { Database: new (name: string, callback: (error: any) => void) => NodeDatabase }
@@ -15,10 +17,11 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
     super()
   }
 
-  public open(name: string): Promise<void>{
+  public open(name: string, options: ConnectionOptions): Promise<void>{
     return new Promise(async(resolve, reject) => {
       try {
         this.name = name
+        this.options = options
         this.db = new this.engine.Database(name, error => {
           if (error){
             reject(error)
@@ -31,13 +34,17 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
       catch(error){
         reject(error)
       }
+    }).then(async () => {
+      if (options.enable_foreign_keys === true){
+        await this.executeSql("PRAGMA foreign_keys = ON;")
+      }
     })
   }
 
   public transaction(scope: (tx: Transaction) => void): Promise<Transaction> {
     return new Promise(async(resolve, reject) => {
       try {
-        const transaction = new NodeSQLiteTransaction(this.name, this.engine)
+        const transaction = new NodeSQLiteTransaction(this.name, this.engine, this.options)
         await transaction.beginTransaction(scope)
         resolve(transaction)
       }

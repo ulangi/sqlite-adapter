@@ -2,9 +2,12 @@ import { SQLiteDatabase as RNSQLiteDatabase} from "react-native-sqlite-storage"
 import { SQLiteDatabase, } from "./SQLiteDatabase"
 import { ReactNativeSQLiteTransaction } from "./ReactNativeSqliteTransaction"
 import { Transaction } from "./Transaction"
+import { ConnectionOptions } from "./ConnectionOptions"
 import { Result } from "./Result"
 
 export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
+
+  private db!: RNSQLiteDatabase
 
   public constructor(
     private engine: {
@@ -14,9 +17,7 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
     super()
   }
 
-  private db!: RNSQLiteDatabase
-
-  public open(name: string): Promise<void> {
+  public open(name: string, options: ConnectionOptions): Promise<void> {
     return new Promise(async(resolve, reject) => {
       try {
         this.db = await this.engine.openDatabase({ name, location: "default" })
@@ -24,6 +25,10 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
       }
       catch (error){
         reject(error)
+      }
+    }).then(async() => {
+      if (options.enable_foreign_keys === true){
+        await this.executeSql("PRAGMA foreign_keys = ON;")
       }
     })
   }
