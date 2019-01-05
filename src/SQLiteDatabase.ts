@@ -1,5 +1,3 @@
-import * as reactnativesqlite from "react-native-sqlite-storage"
-import * as sqlite3 from "sqlite3"
 import { Transaction } from "./Transaction"
 import { Result } from "./Result"
 
