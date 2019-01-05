@@ -30,5 +30,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "mobx": "^4.8.0"
+  }
 }

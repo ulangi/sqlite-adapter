@@ -7,6 +7,7 @@ import { Result } from "./Result"
 export class NodeSQLiteDatabase extends SQLiteDatabase {
 
   private db!: NodeDatabase
+  private name!: string
 
   public constructor(
     private engine: { Database: new (name: string, callback: (error: any) => void) => NodeDatabase }
@@ -17,6 +18,7 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
   public open(name: string): Promise<void>{
     return new Promise(async(resolve, reject) => {
       try {
+        this.name = name
         this.db = new this.engine.Database(name, error => {
           if (error){
             reject(error)
@@ -35,21 +37,9 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
   public transaction(scope: (tx: Transaction) => void): Promise<Transaction> {
     return new Promise(async(resolve, reject) => {
       try {
-        this.db.serialize(() => {
-          this.db.run("BEGIN TRANSACTION", () => {
-            scope(new NodeSQLiteTransaction(this.db))
-            this.db.run("COMMIT", (error) => {
-              if (error){
-                this.db.run("ROLLBACK", () => {
-                  reject(error)
-                })
-              }
-              else {
-                resolve()
-              }
-            })
-          })
-        })
+        const transaction = new NodeSQLiteTransaction(this.name, this.engine)
+        await transaction.beginTransaction(scope)
+        resolve(transaction)
       }
       catch (error){
         reject(error)
@@ -91,5 +81,9 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
         reject(error)
       }
     })
+  }
+
+  public getDb(){
+    return this.db
   }
 }
