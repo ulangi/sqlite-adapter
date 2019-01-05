@@ -9,7 +9,7 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
   private db!: NodeDatabase
 
   public constructor(
-    private engine: { Database: new (name: string) => NodeDatabase }
+    private engine: { Database: new (name: string, callback: (error: any) => void) => NodeDatabase }
   ){
     super()
   }
@@ -17,8 +17,14 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
   public open(name: string): Promise<void>{
     return new Promise(async(resolve, reject) => {
       try {
-        this.db = new this.engine.Database(name)
-        resolve()
+        this.db = new this.engine.Database(name, error => {
+          if (error){
+            reject(error)
+          }
+          else {
+            resolve()
+          }
+        })
       }
       catch(error){
         reject(error)
