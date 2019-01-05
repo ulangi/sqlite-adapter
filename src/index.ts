@@ -1,4 +1,5 @@
-export { DatabaseAdapter } from "./DatabaseAdapter"
+export { ReactNativeSQLiteDatabase } from "./ReactNativeSQLiteDatabase"
+export { NodeSQLiteDatabase } from "./NodeSQLiteDatabase"
 export { SQLiteDatabase } from "./SQLiteDatabase"
 export { Transaction } from "./Transaction"
 export { Result } from "./Result"
