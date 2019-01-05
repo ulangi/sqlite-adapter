@@ -36,12 +36,14 @@ export class NodeSQLiteTransaction extends Transaction {
             () => this.remainingQueries.get() === 0,
             () => {
               if (this.hasError){
-                this.db.run("ROLLBACK;")
-                reject(this.lastError)
+                this.db.run("ROLLBACK;", () => {
+                  reject(this.lastError)
+                })
               }
               else {
-                this.db.run("COMMIT;")
-                resolve()
+                this.db.run("COMMIT;", () => {
+                  resolve()
+                })
               }
               this.db.close()
             }
