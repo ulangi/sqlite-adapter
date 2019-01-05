@@ -27,5 +27,8 @@
     "react-native": "^0.57.8",
     "react-native-sqlite-storage": "^3.3.9",
     "sqlite3": "^4.0.4"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
