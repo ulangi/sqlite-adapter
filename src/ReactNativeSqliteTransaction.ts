@@ -6,12 +6,14 @@ export class ReactNativeSQLiteTransaction extends Transaction {
   private tx!: RNTransaction
   private hasError: boolean
   private lastError: any
+  private committedListeners: Array<() => void>
 
   public constructor(
     private db: RNSQLiteDatabase
   ){
     super()
     this.hasError = false
+    this.committedListeners = []
   }
 
   public beginTransaction(scope: (tx: Transaction) => void): Promise<void> {
@@ -30,6 +32,7 @@ export class ReactNativeSQLiteTransaction extends Transaction {
           }
           else {
             resolve()
+            this.committedListeners.forEach(callback => callback())
           }
         }
       )
@@ -45,5 +48,9 @@ export class ReactNativeSQLiteTransaction extends Transaction {
         this.lastError = error
       }
     )
+  }
+
+  public onCommitted(callback: () => void){
+    this.committedListeners.push(callback)
   }
 }

@@ -9,6 +9,7 @@ export class NodeSQLiteTransaction extends Transaction {
   private hasError: boolean
   private lastError: any
   private remainingQueries: IObservableValue<number>
+  private committedListeners: Array<() => void>
 
   private db!: NodeDatabase
   
@@ -20,6 +21,7 @@ export class NodeSQLiteTransaction extends Transaction {
     super()
     this.hasError = false
     this.remainingQueries = observable.box(0)
+    this.committedListeners = []
   }
 
   public beginTransaction(scope: (tx: Transaction) => void): Promise<void>{
@@ -45,6 +47,7 @@ export class NodeSQLiteTransaction extends Transaction {
               else {
                 this.db.run("COMMIT;", () => {
                   resolve()
+                  this.committedListeners.forEach(callback => callback())
                 })
               }
               this.db.close()
@@ -67,5 +70,9 @@ export class NodeSQLiteTransaction extends Transaction {
       }
       this.remainingQueries.set(this.remainingQueries.get() - 1)
     })
+  }
+
+  public onCommitted(callback: () => void){
+    this.committedListeners.push(callback)
   }
 }
