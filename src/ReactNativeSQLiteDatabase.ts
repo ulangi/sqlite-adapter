@@ -11,7 +11,11 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
 
   public constructor(
     private engine: {
-      openDatabase: (param: { name: string, location: string }) => Promise<RNSQLiteDatabase>
+      openDatabase: (
+        param: { name: string, location: string },
+        successCB: () => void,
+        errorCB: (error?: any) => void
+      ) => RNSQLiteDatabase
     }
   ){
     super()
@@ -20,8 +24,11 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
   public open(name: string, options: ConnectionOptions): Promise<void> {
     return new Promise(async(resolve, reject) => {
       try {
-        this.db = await this.engine.openDatabase({ name, location: "default" })
-        resolve()
+        this.db = this.engine.openDatabase({ name, location: "default" }, () => {
+          resolve()
+        }, (error) => {
+          reject(error)
+        })
       }
       catch (error){
         reject(error)
@@ -36,8 +43,11 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
   public close(): Promise<void> {
     return new Promise(async(resolve, reject) => {
       try {
-        await this.db.close()
-        resolve()
+        this.db.close(() => {
+          resolve()
+        }, error => {
+          reject(error)
+        })
       }
       catch (error){
         reject(error)
@@ -48,8 +58,9 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
   public transaction(scope: (tx: Transaction) => void): Promise<Transaction> {
     return new Promise(async(resolve, reject) => {
       try {
-        await this.db.transaction(tx => new ReactNativeSQLiteTransaction(tx))
-        resolve()
+        const transaction = new ReactNativeSQLiteTransaction(this.db)
+        await transaction.beginTransaction(scope)
+        resolve(transaction)
       }
       catch (error){
         reject(error)
@@ -60,13 +71,19 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
   public executeSql(statement: string, params?: any[]): Promise<Result> {
     return new Promise(async (resolve, reject) => {
       try {
-        const [ resultSet ] = await this.db.executeSql(statement, params)
-        const rows = []
-        for (let i = 0; i < resultSet.rows.length; i++){
-          const item = resultSet.rows.item(i)
-          rows.push(item)
-        }
-        resolve({ rows })
+        this.db.executeSql(statement, params, 
+          (tx, resultSet) => {
+            const rows = []
+            for (let i = 0; i < resultSet.rows.length; i++){
+              const item = resultSet.rows.item(i)
+              rows.push(item)
+            }
+            resolve({ rows })
+          },
+          error => {
+            reject(error)
+          }
+        )
       }
       catch(error){
         reject(error)

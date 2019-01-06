@@ -58,25 +58,14 @@ export class NodeSQLiteTransaction extends Transaction {
     })
   }
 
-  public executeSql(statement: string, params?: any[] ): Promise<Transaction> {
-    return new Promise(async(resolve, reject) => {
-      try {
-        this.remainingQueries.set(this.remainingQueries.get() + 1)
-        this.db.run(statement, params, (error) => {
-          if (error){
-            this.hasError = true
-            this.lastError = error
-            reject(error)
-          }
-          else {
-            resolve(this)
-          }
-          this.remainingQueries.set(this.remainingQueries.get() - 1)
-        })
+  public executeSql(statement: string, params?: any[] ): void {
+    this.remainingQueries.set(this.remainingQueries.get() + 1)
+    this.db.run(statement, params, (error) => {
+      if (error){
+        this.hasError = true
+        this.lastError = error
       }
-      catch (error){
-        reject(error)
-      }
+      this.remainingQueries.set(this.remainingQueries.get() - 1)
     })
   }
 }
