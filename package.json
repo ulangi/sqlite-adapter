@@ -32,6 +32,6 @@
     "dist"
   ],
   "dependencies": {
-    "mobx": "^4.8.0"
+    "mobx": "^4.6.0"
   }
 }
