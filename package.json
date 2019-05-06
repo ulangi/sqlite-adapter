@@ -1,5 +1,5 @@
 {
-  "name": "@minhloi/sqlite-adapter",
+  "name": "@ulangi/sqlite-adapter",
   "version": "1.0.16",
   "description": "",
   "main": "dist/index.js",
