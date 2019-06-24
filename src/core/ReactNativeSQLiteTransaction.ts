@@ -4,15 +4,14 @@ import { Transaction } from "./Transaction"
 export class ReactNativeSQLiteTransaction extends Transaction {
 
   private tx!: RNTransaction
-  private hasError: boolean
-  private lastError: any
+  private errors: any[]
   private committedListeners: Array<() => void>
 
   public constructor(
     private db: RNSQLiteDatabase
   ){
     super()
-    this.hasError = false
+    this.errors = []
     this.committedListeners = []
   }
 
@@ -27,8 +26,8 @@ export class ReactNativeSQLiteTransaction extends Transaction {
           reject(error)
         },
         () => {
-          if (this.hasError === true){
-            reject(this.lastError)
+          if (this.errors.length > 0){
+            reject(this.errors[0])
           }
           else {
             resolve()
@@ -44,8 +43,7 @@ export class ReactNativeSQLiteTransaction extends Transaction {
     this.tx.executeSql(statement, params,
       () => {},
       (error) => {
-        this.hasError = true
-        this.lastError = error
+        this.errors.push(error)
       }
     )
   }

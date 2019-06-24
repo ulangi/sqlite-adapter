@@ -1,13 +1,12 @@
 import { Database as NodeDatabase } from "sqlite3"
-import { observable, when, IObservableValue } from "mobx"
+import { observable, when, IObservableValue, IObservableArray } from "mobx"
 import { Transaction } from "./Transaction"
 import { NodeSQLiteDatabase } from "./NodeSQLiteDatabase"
 import { ConnectionOptions } from "./ConnectionOptions"
 
 export class NodeSQLiteTransaction extends Transaction {
 
-  private hasError: boolean
-  private lastError: any
+  private errors: IObservableArray<any>
   private remainingQueries: IObservableValue<number>
   private committedListeners: Array<() => void>
 
@@ -19,7 +18,7 @@ export class NodeSQLiteTransaction extends Transaction {
     private options: ConnectionOptions
   ){
     super()
-    this.hasError = false
+    this.errors = observable.array()
     this.remainingQueries = observable.box(0)
     this.committedListeners = []
   }
@@ -35,13 +34,18 @@ export class NodeSQLiteTransaction extends Transaction {
         this.db = adapter.getDb()
         this.db.serialize(() => {
           this.db.run("BEGIN TRANSACTION;")
-          scope(this)
+          try {
+            scope(this)
+          } catch (error){
+            this.errors.push(error)
+          }
+
           when(
-            () => this.remainingQueries.get() === 0,
+            () => this.remainingQueries.get() === 0 || this.errors.length > 0,
             () => {
-              if (this.hasError){
+              if (this.errors.length > 0){
                 this.db.run("ROLLBACK;", () => {
-                  reject(this.lastError)
+                  reject(this.errors[0])
                 })
               }
               else {
@@ -65,8 +69,7 @@ export class NodeSQLiteTransaction extends Transaction {
     this.remainingQueries.set(this.remainingQueries.get() + 1)
     this.db.run(statement, params, (error) => {
       if (error){
-        this.hasError = true
-        this.lastError = error
+        this.errors.push(error)
       }
       this.remainingQueries.set(this.remainingQueries.get() - 1)
     })
