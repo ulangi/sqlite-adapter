@@ -35,7 +35,6 @@ export class ReactNativeSQLiteTransaction extends Transaction {
           }
         }
       )
-      resolve()
     })
   }
 
