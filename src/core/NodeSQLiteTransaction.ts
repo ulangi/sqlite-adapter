@@ -2,7 +2,6 @@ import { Database as NodeDatabase } from "sqlite3"
 import { observable, when, IObservableValue, IObservableArray } from "mobx"
 import { Transaction } from "./Transaction"
 import { NodeSQLiteDatabase } from "./NodeSQLiteDatabase"
-import { ConnectionOptions } from "./ConnectionOptions"
 
 export class NodeSQLiteTransaction extends Transaction {
 
@@ -15,7 +14,6 @@ export class NodeSQLiteTransaction extends Transaction {
   public constructor(
     private databaseName: string,
     private databaseEngine: { Database: new (name: string, callback: (error: any) => void) => NodeDatabase },
-    private options: ConnectionOptions
   ){
     super()
     this.errors = observable.array()
@@ -26,10 +24,10 @@ export class NodeSQLiteTransaction extends Transaction {
   public beginTransaction(scope: (tx: Transaction) => void): Promise<void>{
     return new Promise(async(resolve, reject) => {
       try {
-        // Because no isolation between operations on the same database connection,
-        // For every transaction, we need to open a new connection
+        // Currently, we open a new connection for each transaction
+        // TODO: Reuse the database connection
         const adapter = new NodeSQLiteDatabase(this.databaseEngine)
-        await adapter.open(this.databaseName, this.options)
+        await adapter.open(this.databaseName)
 
         this.db = adapter.getDb()
         this.db.serialize(() => {
