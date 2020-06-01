@@ -11,8 +11,7 @@ export class NodeSQLiteTransaction extends Transaction {
   private db!: NodeDatabase
   
   public constructor(
-    private databaseName: string,
-    private databaseEngine: { Database: new (name: string, callback: (error: any) => void) => NodeDatabase },
+    private database: NodeDatabase
   ){
     super()
     this.errors = []
@@ -25,10 +24,6 @@ export class NodeSQLiteTransaction extends Transaction {
       try {
         // Currently, we open a new connection for each transaction
         // TODO: Reuse the database connection
-        const adapter = new NodeSQLiteDatabase(this.databaseEngine)
-        await adapter.open(this.databaseName)
-
-        this.db = adapter.getDb()
 
         this.db.serialize(() => {
           this.db.run("BEGIN TRANSACTION;")

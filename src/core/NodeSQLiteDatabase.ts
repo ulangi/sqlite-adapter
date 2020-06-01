@@ -37,7 +37,7 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
   public transaction(scope: (tx: Transaction) => void): Promise<Transaction> {
     return new Promise(async(resolve, reject) => {
       try {
-        const transaction = new NodeSQLiteTransaction(this.name, this.engine)
+        const transaction = new NodeSQLiteTransaction(this.db)
         await transaction.beginTransaction(scope)
         resolve(transaction)
       }
