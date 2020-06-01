@@ -1,12 +1,11 @@
 import { Database as NodeDatabase } from "sqlite3"
-import { observable, when, IObservableValue, IObservableArray } from "mobx"
 import { Transaction } from "./Transaction"
 import { NodeSQLiteDatabase } from "./NodeSQLiteDatabase"
 
 export class NodeSQLiteTransaction extends Transaction {
 
-  private errors: IObservableArray<any>
-  private remainingQueries: IObservableValue<number>
+  private errors: any[]
+  private queries: [string, any][]
   private committedListeners: Array<() => void>
 
   private db!: NodeDatabase
@@ -16,12 +15,12 @@ export class NodeSQLiteTransaction extends Transaction {
     private databaseEngine: { Database: new (name: string, callback: (error: any) => void) => NodeDatabase },
   ){
     super()
-    this.errors = observable.array()
-    this.remainingQueries = observable.box(0)
+    this.errors = []
+    this.queries = []
     this.committedListeners = []
   }
 
-  public beginTransaction(scope: (tx: Transaction) => void): Promise<void>{
+  public beginTransaction(transactionScope: (tx: Transaction) => void): Promise<void>{
     return new Promise(async(resolve, reject) => {
       try {
         // Currently, we open a new connection for each transaction
@@ -30,17 +29,13 @@ export class NodeSQLiteTransaction extends Transaction {
         await adapter.open(this.databaseName)
 
         this.db = adapter.getDb()
+
         this.db.serialize(() => {
           this.db.run("BEGIN TRANSACTION;")
-          try {
-            scope(this)
-          } catch (error){
-            this.errors.push(error)
-          }
 
-          when(
-            () => this.remainingQueries.get() === 0 || this.errors.length > 0,
-            () => {
+          transactionScope(this)
+          this.executeQueries((done): void => {
+            if (done) {
               if (this.errors.length > 0){
                 this.db.run("ROLLBACK;", () => {
                   reject(this.errors[0])
@@ -52,9 +47,8 @@ export class NodeSQLiteTransaction extends Transaction {
                   this.committedListeners.forEach(callback => callback())
                 })
               }
-              this.db.close()
             }
-          )
+          })
         })
       }
       catch (error){
@@ -64,16 +58,22 @@ export class NodeSQLiteTransaction extends Transaction {
   }
 
   public executeSql(statement: string, params?: any[] ): void {
-    this.remainingQueries.set(this.remainingQueries.get() + 1)
-    this.db.run(statement, params, (error) => {
-      if (error){
-        this.errors.push(error)
-      }
-      this.remainingQueries.set(this.remainingQueries.get() - 1)
-    })
+    this.queries.push([statement, params]);
   }
 
   public onCommitted(callback: () => void){
     this.committedListeners.push(callback)
+  }
+
+  private executeQueries(callback: (done: boolean) => void): void {
+    this.queries.forEach(([statement, params], index): void => {
+      this.db.run(statement, params, (error: any): void => {
+        if (error){
+          this.errors.push(error)
+        }
+
+        callback(index === this.queries.length - 1)
+      })
+    })
   }
 }
