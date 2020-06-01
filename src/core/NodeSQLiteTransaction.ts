@@ -11,9 +11,10 @@ export class NodeSQLiteTransaction extends Transaction {
   private db!: NodeDatabase
   
   public constructor(
-    private database: NodeDatabase
+    db: NodeDatabase
   ){
     super()
+    this.db = db
     this.errors = []
     this.queries = []
     this.committedListeners = []
