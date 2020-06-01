@@ -30,6 +30,7 @@ export class NodeSQLiteTransaction extends Transaction {
           this.db.run("BEGIN TRANSACTION;")
 
           transactionScope(this)
+
           this.executeQueries((done): void => {
             if (done) {
               if (this.errors.length > 0){
@@ -43,6 +44,7 @@ export class NodeSQLiteTransaction extends Transaction {
                   this.committedListeners.forEach(callback => callback())
                 })
               }
+              this.queries = []
             }
           })
         })
@@ -62,14 +64,19 @@ export class NodeSQLiteTransaction extends Transaction {
   }
 
   private executeQueries(callback: (done: boolean) => void): void {
-    this.queries.forEach(([statement, params], index): void => {
-      this.db.run(statement, params, (error: any): void => {
-        if (error){
-          this.errors.push(error)
-        }
+    if (this.queries.length === 0) {
+      callback(true)
+    }
+    else {
+      this.queries.forEach(([statement, params], index): void => {
+        this.db.run(statement, params, (error: any): void => {
+          if (error){
+            this.errors.push(error)
+          }
 
-        callback(index === this.queries.length - 1)
+          callback(index === this.queries.length - 1)
+        })
       })
-    })
+    }
   }
 }
