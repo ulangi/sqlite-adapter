@@ -45,26 +45,11 @@ export class ReactNativeSQLiteTransaction extends Transaction {
   public executeSql(
     statement: string,
     params?: any[],
-    resultCallback?: (result: Result) => void,
-    errorCallback?: (error: any) => void
   ): void {
     this.tx.executeSql(statement, params,
-      (_, resultSet) => {
-        if (typeof resultCallback !== 'undefined') {
-          const rows = []
-          for (let i = 0; i < resultSet.rows.length; i++){
-            const item = resultSet.rows.item(i)
-            rows.push(item)
-          }
-
-          resultCallback({ rows })
-        }
-      },
+      () => {},
       (error) => {
         this.errors.push(error)
-        if (typeof errorCallback !== 'undefined') {
-          errorCallback(error)
-        }
       }
     )
   }

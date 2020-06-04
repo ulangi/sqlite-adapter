@@ -5,7 +5,7 @@ import { Result } from "./Result"
 
 export class NodeSQLiteTransaction extends Transaction {
 
-  private queries: [string, any, ((result: Result) => void)?, ((error: any) => void)?][]
+  private queries: [string, any][]
   private commitListeners: Array<() => void>
   private rollbackListeners: Array<() => void>
 
@@ -63,10 +63,8 @@ export class NodeSQLiteTransaction extends Transaction {
   public executeSql(
     statement: string,
     params?: any[],
-    resultCallback?: (result: Result) => void,
-    errorCallback?: (error: any) => void
   ): void {
-    this.queries.push([statement, params, resultCallback, errorCallback]);
+    this.queries.push([statement, params]);
   }
 
   public onCommit(callback: () => void){
@@ -79,32 +77,17 @@ export class NodeSQLiteTransaction extends Transaction {
 
   private executeQueries(callback: (error: any) => void): void {
     let index = 0
-    let done = this.queries.length !== 0
     let error = null
 
-    while (done === false) {
-      const [ statement, params, resultCallback, errorCallback ] = this.queries[index]
+    while (index < this.queries.length || error === null) {
+      const [ statement, params ] = this.queries[index]
 
-      this.db.all(statement, params, (err: any, rows: any[]): void => {
+      this.db.all(statement, params, (err: any): void => {
         if (err){
-          if (typeof errorCallback !== 'undefined'){
-            errorCallback(err)
-          }
-
           error = err;
-          done = true;
         }
         else {
-          if (typeof resultCallback !== 'undefined'){
-            resultCallback({ rows })
-          }
-
-          if(index === this.queries.length - 1){
-            done = true;
-          }
-          else {
-            index++;
-          }
+          index++;
         }
       })
     }
