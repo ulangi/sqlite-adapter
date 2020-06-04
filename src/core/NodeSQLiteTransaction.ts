@@ -5,7 +5,6 @@ import { Result } from "./Result"
 
 export class NodeSQLiteTransaction extends Transaction {
 
-  private errors: any[]
   private queries: [string, any, ((result: Result) => void)?, ((error: any) => void)?][]
   private commitListeners: Array<() => void>
   private rollbackListeners: Array<() => void>
@@ -17,7 +16,6 @@ export class NodeSQLiteTransaction extends Transaction {
   ){
     super()
     this.db = db
-    this.errors = []
     this.queries = []
     this.commitListeners = []
     this.rollbackListeners = []
@@ -25,35 +23,39 @@ export class NodeSQLiteTransaction extends Transaction {
 
   public run(scope: (tx: Transaction) => void): Promise<void>{
     return new Promise(async(resolve, reject) => {
+      let transactionStarted
+
       try {
-        // Currently, we open a new connection for each transaction
-        // TODO: Reuse the database connection
+        transactionStarted = false
 
         this.db.serialize(() => {
           scope(this)
 
           this.db.run("BEGIN TRANSACTION;")
-          this.executeQueries((done): void => {
-            if (done) {
-              if (this.errors.length > 0){
-                this.db.run("ROLLBACK;", () => {
-                  reject(this.errors.length === 1 ? this.errors[0] : this.errors)
-                  this.rollbackListeners.forEach(callback => callback())
-                })
-              }
-              else {
-                this.db.run("COMMIT;", () => {
-                  resolve()
-                  this.commitListeners.forEach(callback => callback())
-                })
-              }
-              this.queries = []
+          transactionStarted = true
+
+          this.executeQueries((error): void => {
+            if (error){
+              throw error;
+            }
+            else {
+              this.db.run("COMMIT;", () => {
+                resolve()
+                this.commitListeners.forEach(callback => callback())
+              })
             }
           })
         })
-      }
-      catch (error){
-        reject(error)
+      } catch (error){
+        if (transactionStarted === true) {
+          this.db.run("ROLLBACK;", () => {
+            reject(error)
+            this.rollbackListeners.forEach(callback => callback())
+          })
+        }
+        else {
+          reject(error)
+        }
       }
     })
   }
@@ -75,26 +77,38 @@ export class NodeSQLiteTransaction extends Transaction {
     this.rollbackListeners.push(callback)
   }
 
-  private executeQueries(callback: (done: boolean) => void): void {
-    if (this.queries.length === 0) {
-      callback(true)
-    } else {
-      this.queries.forEach(([statement, params, resultCallback, errorCallback], index): void => {
-        this.db.all(statement, params, (error: any, rows: any[]): void => {
-          if (error){
-            this.errors.push(error)
-            if (typeof errorCallback !== 'undefined'){
-              errorCallback(error)
-            }
+  private executeQueries(callback: (error: any) => void): void {
+    let index = 0
+    let done = this.queries.length !== 0
+    let error = null
+
+    while (done === false) {
+      const [ statement, params, resultCallback, errorCallback ] = this.queries[index]
+
+      this.db.all(statement, params, (err: any, rows: any[]): void => {
+        if (err){
+          if (typeof errorCallback !== 'undefined'){
+            errorCallback(err)
           }
 
+          error = err;
+          done = true;
+        }
+        else {
           if (typeof resultCallback !== 'undefined'){
             resultCallback({ rows })
           }
 
-          callback(index === this.queries.length - 1)
-        })
+          if(index === this.queries.length - 1){
+            done = true;
+          }
+          else {
+            index++;
+          }
+        }
       })
     }
+
+    callback(error)
   }
 }
