@@ -3,16 +3,19 @@ import { SQLiteDatabase } from "./SQLiteDatabase"
 import { NodeSQLiteTransaction } from "./NodeSQLiteTransaction"
 import { Transaction } from "./Transaction"
 import { Result } from "./Result"
+import { SerializedQueue } from "./SerializedQueue"
 
 export class NodeSQLiteDatabase extends SQLiteDatabase {
 
   private db!: NodeDatabase
   private name!: string
+  private queue: SerializedQueue
 
   public constructor(
     private engine: { Database: new (name: string, callback: (error: any) => void) => NodeDatabase }
   ){
     super()
+    this.queue = new SerializedQueue()
   }
 
   public open(name: string): Promise<void>{
@@ -34,23 +37,14 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
     })
   }
 
-  public transaction(scope: (tx: Transaction) => void): Promise<Transaction> {
-    return new Promise(async(resolve, reject) => {
-      try {
-        const transaction = new NodeSQLiteTransaction(this.db)
-        await transaction.beginTransaction(scope)
-        resolve(transaction)
-      }
-      catch (error){
-        reject(error)
-      }
-    })
-  }
-
   public close(): Promise<void> {
     return new Promise(async(resolve, reject) => {
       try {
+        await this.queue.enqueue()
+
         this.db.close((error) => {
+          this.queue.dequeue()
+
           if (error){
             reject(error)
           }
@@ -65,10 +59,28 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
     })
   }
 
+  public transaction(scope: (tx: Transaction) => void): Promise<void> {
+    return new Promise(async(resolve, reject) => {
+      try {
+        await this.queue.enqueue()
+        await new NodeSQLiteTransaction(this.db).run(scope)
+        this.queue.dequeue()
+        resolve()
+      }
+      catch (error){
+        reject(error)
+      }
+    })
+  }
+
   public executeSql(statement: string, params?: any[]): Promise<Result> {
     return new Promise(async (resolve, reject) => {
       try {
+        await this.queue.enqueue()
+
         this.db.all(statement, params, (error, rows) => {
+          this.queue.dequeue()
+
           if (error){
             reject(error)
           }

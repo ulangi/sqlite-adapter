@@ -1,5 +1,14 @@
+import { Result } from "./Result"
+
 export abstract class Transaction {
-  public abstract executeSql(statement: string, params?: any[] ): void
-  public abstract onCommitted(callback: () => void): void
+  public abstract executeSql(
+    statement: string,
+    params?: any[],
+    resultCallback?: (result: Result) => void,
+    errorCallback?: (error: any) => void
+  ): void
+
+  public abstract onCommit(callback: () => void): void
+  public abstract onRollback(callback: () => void): void
 }
 

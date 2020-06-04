@@ -50,12 +50,11 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
     })
   }
 
-  public transaction(scope: (tx: Transaction) => void): Promise<Transaction> {
+  public transaction(scope: (tx: Transaction) => void): Promise<void> {
     return new Promise(async(resolve, reject) => {
       try {
-        const transaction = new ReactNativeSQLiteTransaction(this.db)
-        await transaction.beginTransaction(scope)
-        resolve(transaction)
+        await new ReactNativeSQLiteTransaction(this.db).run(scope)
+        resolve()
       }
       catch (error){
         reject(error)
@@ -67,13 +66,14 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
     return new Promise(async (resolve, reject) => {
       try {
         this.db.executeSql(statement, params, 
-          (resultSet: any) => {
+          (_, resultSet) => {
             const rows = []
             for (let i = 0; i < resultSet.rows.length; i++){
               const item = resultSet.rows.item(i)
               rows.push(item)
             }
-            resolve({ rows })
+
+            resolve({ ...resultSet, rows })
           },
           error => {
             reject(error)
