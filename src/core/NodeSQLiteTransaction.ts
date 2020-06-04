@@ -36,21 +36,21 @@ export class NodeSQLiteTransaction extends Transaction {
 
           this.executeQueries((error): void => {
             if (error){
-              throw error;
+              this.rollback((): void => {
+                reject(error)
+              })
             }
             else {
-              this.db.run("COMMIT;", () => {
+              this.commit((): void => {
                 resolve()
-                this.commitListeners.forEach(callback => callback())
               })
             }
           })
         })
       } catch (error){
         if (transactionStarted === true) {
-          this.db.run("ROLLBACK;", () => {
+          this.rollback((): void => {
             reject(error)
-            this.rollbackListeners.forEach(callback => callback())
           })
         }
         else {
@@ -76,22 +76,45 @@ export class NodeSQLiteTransaction extends Transaction {
   }
 
   private executeQueries(callback: (error: any) => void): void {
-    let index = 0
-    let error = null
-
-    while (index < this.queries.length || error === null) {
-      const [ statement, params ] = this.queries[index]
-
-      this.db.all(statement, params, (err: any): void => {
-        if (err){
-          error = err;
-        }
-        else {
-          index++;
-        }
-      })
+    if (this.queries.length === 0) {
+      callback(null);
     }
+    else {
+      let index = 0
+      let error: any = null
 
-    callback(error)
+      while (index < this.queries.length) {
+        const [ statement, params ] = this.queries[index]
+          const isLastQuery = (index === this.queries.length - 1)
+
+        this.db.run(statement, params, (err: any): void => {
+          if (err !== null && error === null) {
+            error = err;
+          }
+
+          if (isLastQuery) {
+            callback(error);
+          }
+        })
+
+        index++;
+      }
+
+      callback(error)
+    }
+  }
+
+  private rollback(callback: () => void): void {
+    this.db.run("ROLLBACK;", () => {
+      callback();
+      this.rollbackListeners.forEach(callback => callback())
+    })
+  }
+
+  private commit(callback: () => void): void {
+    this.db.run("COMMIT;", () => {
+      callback();
+      this.commitListeners.forEach(callback => callback())
+    })
   }
 }
