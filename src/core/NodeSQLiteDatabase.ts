@@ -54,6 +54,7 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
         })
       }
       catch (error){
+        this.queue.dequeue()
         reject(error)
       }
     })
@@ -68,6 +69,7 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
         resolve()
       }
       catch (error){
+        this.queue.dequeue()
         reject(error)
       }
     })
@@ -90,6 +92,7 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
         })
       }
       catch(error){
+        this.queue.dequeue()
         reject(error)
       }
     })
