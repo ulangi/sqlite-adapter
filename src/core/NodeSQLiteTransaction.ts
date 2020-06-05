@@ -85,7 +85,7 @@ export class NodeSQLiteTransaction extends Transaction {
 
       while (index < this.queries.length) {
         const [ statement, params ] = this.queries[index]
-          const isLastQuery = (index === this.queries.length - 1)
+        const isLastQuery = (index === this.queries.length - 1)
 
         this.db.run(statement, params, (err: any): void => {
           if (err !== null && error === null) {
@@ -99,8 +99,6 @@ export class NodeSQLiteTransaction extends Transaction {
 
         index++;
       }
-
-      callback(error)
     }
   }
 
