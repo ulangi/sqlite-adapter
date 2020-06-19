@@ -66,7 +66,7 @@ export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
     return new Promise(async (resolve, reject) => {
       try {
         this.db.executeSql(statement, params, 
-          (_, resultSet) => {
+          (resultSet: any) => {
             const rows = []
             for (let i = 0; i < resultSet.rows.length; i++){
               const item = resultSet.rows.item(i)
