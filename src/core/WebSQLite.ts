@@ -12,8 +12,8 @@ export class WebSQLite extends SQLiteAdapter {
     this.initSql = init;
   }
 
-  public async init(): Promise<void> {
-    this.sqlite = await this.initSql()
+  public async init(config?: Partial<EmscriptenModule>): Promise<void> {
+    this.sqlite = await this.initSql(config)
   }
 
   public createDatabase(): WebSQLiteDatabase {
