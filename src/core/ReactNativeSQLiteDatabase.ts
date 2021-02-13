@@ -1,4 +1,4 @@
-import { SQLiteDatabase as RNSQLiteDatabase} from "react-native-sqlite-storage"
+import * as RNSQLite from "react-native-sqlite-storage"
 import { SQLiteDatabase, } from "./SQLiteDatabase"
 import { ReactNativeSQLiteTransaction } from "./ReactNativeSqliteTransaction"
 import { Transaction } from "./Transaction"
@@ -6,16 +6,10 @@ import { Result } from "./Result"
 
 export class ReactNativeSQLiteDatabase extends SQLiteDatabase {
 
-  private db!: RNSQLiteDatabase
+  private db!: RNSQLite.SQLiteDatabase
 
   public constructor(
-    private engine: {
-      openDatabase: (
-        param: { name: string, location: string },
-        successCB: () => void,
-        errorCB: (error?: any) => void
-      ) => RNSQLiteDatabase
-    }
+    private engine: typeof RNSQLite
   ){
     super()
   }

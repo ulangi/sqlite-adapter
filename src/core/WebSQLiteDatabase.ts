@@ -1,38 +1,37 @@
-import { Database as NodeDatabase } from "sqlite3"
 import { SQLiteDatabase } from "./SQLiteDatabase"
-import { NodeSQLiteTransaction } from "./NodeSQLiteTransaction"
+import { WebSQLiteTransaction } from "./WebSQLiteTransaction"
 import { Transaction } from "./Transaction"
 import { Result } from "./Result"
 import { SerializedQueue } from "./SerializedQueue"
-import * as sqlite3 from "sqlite3"
+import initSqlJs from "sql.js"
+import init from "sql.js"
+import { PromiseType } from "utility-types"
 
-export class NodeSQLiteDatabase extends SQLiteDatabase {
+export type SqlJsStatic = PromiseType<ReturnType<typeof initSqlJs>>
+export type SqlJsDatabase = InstanceType<SqlJsStatic["Database"]>
 
-  private db!: NodeDatabase
+export class WebSQLiteDatabase extends SQLiteDatabase {
+
+  private db!: SqlJsDatabase
   private name!: string
   private queue: SerializedQueue
-  private sqlite: typeof sqlite3
+  private sqlite: SqlJsStatic
 
   public constructor(
-    sqlite: typeof sqlite3
+    sqlite: PromiseType<ReturnType<typeof initSqlJs>>
   ){
     super()
     this.sqlite = sqlite;
-    this.queue = new SerializedQueue();
+    this.queue = new SerializedQueue()
   }
 
   public open(name: string): Promise<void>{
     return new Promise(async(resolve, reject) => {
       try {
         this.name = name
-        this.db = new this.sqlite.Database(name, error => {
-          if (error){
-            reject(error)
-          }
-          else {
-            resolve()
-          }
-        })
+        this.db = new this.sqlite.Database()
+
+        resolve();
       }
       catch(error){
         reject(error)
@@ -45,16 +44,8 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
       try {
         await this.queue.enqueue()
 
-        this.db.close((error) => {
-          this.queue.dequeue()
-
-          if (error){
-            reject(error)
-          }
-          else {
-            resolve()
-          }
-        })
+        this.db.close();
+        resolve()
       }
       catch (error){
         this.queue.dequeue()
@@ -67,7 +58,8 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
     return new Promise(async(resolve, reject) => {
       try {
         await this.queue.enqueue()
-        await new NodeSQLiteTransaction(this.db).run(scope)
+
+        await new WebSQLiteTransaction(this.db).run(scope)
         this.queue.dequeue()
         resolve()
       }
@@ -83,15 +75,12 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
       try {
         await this.queue.enqueue()
 
-        this.db.all(statement, params, (error, rows) => {
+        const rows: any[] = [];
+        this.db.each(statement, params || [], (row): void => {
+          rows.push(row)
+        }, (): void => {
+          resolve({ rows })
           this.queue.dequeue()
-
-          if (error){
-            reject(error)
-          }
-          else {
-            resolve({ rows })
-          }
         })
       }
       catch(error){
@@ -101,7 +90,7 @@ export class NodeSQLiteDatabase extends SQLiteDatabase {
     })
   }
 
-  public getDb(){
+  public getDb(): SqlJsDatabase  {
     return this.db
   }
 }
