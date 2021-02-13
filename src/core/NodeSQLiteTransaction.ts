@@ -1,4 +1,4 @@
-import { Database as NodeDatabase } from "sqlite3"
+import type * as sqlite3 from "sqlite3"
 import { Transaction } from "./Transaction"
 import { NodeSQLiteDatabase } from "./NodeSQLiteDatabase"
 import { Result } from "./Result"
@@ -9,10 +9,10 @@ export class NodeSQLiteTransaction extends Transaction {
   private commitListeners: Array<() => void>
   private rollbackListeners: Array<() => void>
 
-  private db!: NodeDatabase
+  private db!: sqlite3.Database
   
   public constructor(
-    db: NodeDatabase
+    db: sqlite3.Database
   ){
     super()
     this.db = db

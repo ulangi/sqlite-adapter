@@ -1,14 +1,13 @@
-import { Database as NodeDatabase } from "sqlite3"
+import type * as sqlite3 from "sqlite3"
 import { SQLiteDatabase } from "./SQLiteDatabase"
 import { NodeSQLiteTransaction } from "./NodeSQLiteTransaction"
 import { Transaction } from "./Transaction"
 import { Result } from "./Result"
 import { SerializedQueue } from "./SerializedQueue"
-import * as sqlite3 from "sqlite3"
 
 export class NodeSQLiteDatabase extends SQLiteDatabase {
 
-  private db!: NodeDatabase
+  private db!: sqlite3.Database
   private name!: string
   private queue: SerializedQueue
   private sqlite: typeof sqlite3

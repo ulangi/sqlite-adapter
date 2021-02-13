@@ -1,4 +1,4 @@
-import * as RNSQLite from "react-native-sqlite-storage"
+import type * as RNSQLite from "react-native-sqlite-storage"
 import { SQLiteDatabase, } from "./SQLiteDatabase"
 import { ReactNativeSQLiteTransaction } from "./ReactNativeSqliteTransaction"
 import { Transaction } from "./Transaction"

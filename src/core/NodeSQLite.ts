@@ -1,6 +1,6 @@
 import { NodeSQLiteDatabase } from "./NodeSQLiteDatabase"
 import { SQLiteAdapter } from "./SQLiteAdapter"
-import * as sqlite3 from "sqlite3"
+import type * as sqlite3 from "sqlite3"
 
 export class NodeSQLite extends SQLiteAdapter {
 

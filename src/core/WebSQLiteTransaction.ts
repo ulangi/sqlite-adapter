@@ -1,4 +1,3 @@
-import { Database as WebDatabase } from "sqlite3"
 import { Transaction } from "./Transaction"
 import { WebSQLiteDatabase, SqlJsDatabase } from "./WebSQLiteDatabase"
 import { Result } from "./Result"

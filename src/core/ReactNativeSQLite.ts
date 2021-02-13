@@ -1,6 +1,6 @@
 import { ReactNativeSQLiteDatabase } from "./ReactNativeSQLiteDatabase"
 import { SQLiteAdapter } from "./SQLiteAdapter"
-import * as RNSQLite from "react-native-sqlite-storage"
+import type * as RNSQLite from "react-native-sqlite-storage"
 
 export class ReactNativeSQLite extends SQLiteAdapter {
 

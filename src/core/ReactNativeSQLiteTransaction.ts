@@ -1,16 +1,16 @@
-import { SQLiteDatabase as RNSQLiteDatabase, Transaction as RNTransaction} from "react-native-sqlite-storage"
+import type * as RNSQLite from "react-native-sqlite-storage"
 import { Transaction } from "./Transaction"
 import { Result } from "./Result"
 
 export class ReactNativeSQLiteTransaction extends Transaction {
 
-  private tx!: RNTransaction
+  private tx!: RNSQLite.Transaction
   private errors: any[]
   private commitListeners: Array<() => void>
   private rollbackListeners: Array<() => void>
 
   public constructor(
-    private db: RNSQLiteDatabase
+    private db: RNSQLite.SQLiteDatabase
   ){
     super()
     this.errors = []
