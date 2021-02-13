@@ -3,8 +3,7 @@ import { WebSQLiteTransaction } from "./WebSQLiteTransaction"
 import { Transaction } from "./Transaction"
 import { Result } from "./Result"
 import { SerializedQueue } from "./SerializedQueue"
-import initSqlJs from "sql.js"
-import init from "sql.js"
+import type initSqlJs from "sql.js"
 import { PromiseType } from "utility-types"
 
 export type SqlJsStatic = PromiseType<ReturnType<typeof initSqlJs>>
