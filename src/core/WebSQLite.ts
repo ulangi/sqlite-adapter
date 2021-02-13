@@ -1,15 +1,15 @@
 import { WebSQLiteDatabase, SqlJsStatic } from "./WebSQLiteDatabase"
 import { SQLiteAdapter } from "./SQLiteAdapter"
-import init from "sql.js"
+import type initSqlJs from "sql.js"
 
 export class WebSQLite extends SQLiteAdapter {
 
-  private initSql: typeof init
+  private initSql: typeof initSqlJs
   private sqlite?: SqlJsStatic
 
-  public constructor(websql: typeof init) {
+  public constructor(initSql: typeof initSqlJs) {
     super()
-    this.initSql = init;
+    this.initSql = initSql;
   }
 
   public async init(config?: Partial<EmscriptenModule>): Promise<void> {
