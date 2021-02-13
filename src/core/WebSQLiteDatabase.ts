@@ -2,7 +2,6 @@ import { SQLiteDatabase } from "./SQLiteDatabase"
 import { WebSQLiteTransaction } from "./WebSQLiteTransaction"
 import { Transaction } from "./Transaction"
 import { Result } from "./Result"
-import { SerializedQueue } from "./SerializedQueue"
 import type initSqlJs from "sql.js"
 import { PromiseType } from "utility-types"
 
@@ -13,7 +12,6 @@ export class WebSQLiteDatabase extends SQLiteDatabase {
 
   private db!: SqlJsDatabase
   private name!: string
-  private queue: SerializedQueue
   private sqlite: SqlJsStatic
 
   public constructor(
@@ -21,7 +19,6 @@ export class WebSQLiteDatabase extends SQLiteDatabase {
   ){
     super()
     this.sqlite = sqlite;
-    this.queue = new SerializedQueue()
   }
 
   public open(name: string): Promise<void>{
@@ -41,13 +38,10 @@ export class WebSQLiteDatabase extends SQLiteDatabase {
   public close(): Promise<void> {
     return new Promise(async(resolve, reject) => {
       try {
-        await this.queue.enqueue()
-
         this.db.close();
         resolve()
       }
       catch (error){
-        this.queue.dequeue()
         reject(error)
       }
     })
@@ -56,14 +50,10 @@ export class WebSQLiteDatabase extends SQLiteDatabase {
   public transaction(scope: (tx: Transaction) => void): Promise<void> {
     return new Promise(async(resolve, reject) => {
       try {
-        await this.queue.enqueue()
-
         await new WebSQLiteTransaction(this.db).run(scope)
-        this.queue.dequeue()
         resolve()
       }
       catch (error){
-        this.queue.dequeue()
         reject(error)
       }
     })
@@ -72,18 +62,14 @@ export class WebSQLiteDatabase extends SQLiteDatabase {
   public executeSql(statement: string, params?: any[]): Promise<Result> {
     return new Promise(async (resolve, reject) => {
       try {
-        await this.queue.enqueue()
-
         const rows: any[] = [];
         this.db.each(statement, params || [], (row): void => {
           rows.push(row)
         }, (): void => {
           resolve({ rows })
-          this.queue.dequeue()
         })
       }
       catch(error){
-        this.queue.dequeue()
         reject(error)
       }
     })
