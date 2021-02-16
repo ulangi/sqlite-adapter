@@ -124,6 +124,7 @@ export class WebSQLiteDatabase extends SQLiteDatabase {
               }
             }
 
+            this.worker.onmessage = onEach;
             this.worker.postMessage({ action: 'each', sql: statement, params });
           } else if (typeof this.db !== 'undefined') {
             this.db.each(statement, params || [], (row): void => {
