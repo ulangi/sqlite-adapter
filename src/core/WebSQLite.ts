@@ -4,17 +4,11 @@ import type initSqlJs from "sql.js"
 
 export class WebSQLite extends SQLiteAdapter {
 
-  private initSql: typeof initSqlJs
   private sqlite?: SqlJsStatic
   private workerScriptFile?: string
 
-  public constructor(initSql: typeof initSqlJs) {
-    super()
-    this.initSql = initSql;
-  }
-
-  public async useDefault(config?: Partial<EmscriptenModule>): Promise<void> {
-    this.sqlite = await this.initSql(config)
+  public async useDefault(initSql: typeof initSqlJs, config?: Partial<EmscriptenModule>): Promise<void> {
+    this.sqlite = await initSql(config)
   }
 
   public useWorker(workerScriptFile: string): void {
