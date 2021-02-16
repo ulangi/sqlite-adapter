@@ -8,13 +8,16 @@ export class WebSQLiteTransaction extends Transaction {
   private commitListeners: Array<() => void>
   private rollbackListeners: Array<() => void>
 
-  private db!: SqlJsDatabase
+  private db?: SqlJsDatabase
+  private worker?: Worker
   
   public constructor(
-    db: SqlJsDatabase
+    db?: SqlJsDatabase,
+    worker?: Worker
   ){
     super()
     this.db = db
+    this.worker = worker
     this.queries = []
     this.commitListeners = []
     this.rollbackListeners = []
@@ -29,22 +32,31 @@ export class WebSQLiteTransaction extends Transaction {
 
         scope(this)
 
-        this.db.run("BEGIN TRANSACTION;")
+        this.beginTransaction();
 
         transactionStarted = true
         this.executeQueries();
-        this.commit()
+
+        await this.commit()
 
         resolve();
       } catch (error){
         if (transactionStarted === true) {
-          this.rollback();
+          await this.rollback();
         }
         else {
           reject(error)
         }
       }
     })
+  }
+
+  public beginTransaction(): void {
+    if (typeof this.worker !== 'undefined') {
+      this.worker.postMessage({ action: "exec", sql: "BEGIN TRANSACTION;" })
+    } else if (typeof this.db !== 'undefined') {
+      this.db.run("BEGIN TRANSACTION;")
+    }
   }
 
   public executeSql(
@@ -65,25 +77,70 @@ export class WebSQLiteTransaction extends Transaction {
   private executeQueries(): void {
     if (this.queries.length > 0) {
       let index = 0
-      let error: any = null
-
       while (index < this.queries.length) {
         const [ statement, params ] = this.queries[index]
-        const isLastQuery = (index === this.queries.length - 1)
 
-        this.db.run(statement, params);
+        if (typeof this.worker !== 'undefined') {
+          this.worker.postMessage({ action: "exec", sql: statement, params })
+        } else if (typeof this.db !== 'undefined') {
+          this.db.run(statement, params);
+        }
         index++;
       }
     }
   }
 
-  private rollback(): void {
-    this.db.run("ROLLBACK;");
-    this.rollbackListeners.forEach(callback => callback())
+  private rollback(): Promise<void> {
+    return new Promise((resolve, reject): void => {
+      try {
+        if (typeof this.worker !== 'undefined') {
+          const onRollback = (): void => {
+            if (typeof this.worker !== 'undefined') {
+              this.worker.removeEventListener("message", onRollback);
+            }
+            resolve();
+            this.rollbackListeners.forEach(callback => callback())
+          }
+
+          this.worker.onmessage = onRollback;
+          this.worker.postMessage({ action: "exec", sql: "ROLLBACK;" })
+
+        } else if (typeof this.db !== 'undefined') {
+          this.db.run("ROLLBACK;");
+          resolve()
+          this.rollbackListeners.forEach(callback => callback())
+        }
+
+      } catch (error) {
+        reject(error)
+      }
+    })
   }
 
-  private commit(): void {
-    this.db.run("COMMIT;");
-    this.commitListeners.forEach(callback => callback())
+  private commit(): Promise<void> {
+    return new Promise((resolve, reject): void => {
+      try {
+        if (typeof this.worker !== 'undefined') {
+          const onCommit = (): void => {
+            if (typeof this.worker !== 'undefined') {
+              this.worker.removeEventListener("message", onCommit);
+            }
+            resolve();
+            this.commitListeners.forEach(callback => callback())
+          }
+
+          this.worker.onmessage = onCommit;
+          this.worker.postMessage({ action: "exec", sql: "COMMIT;" })
+
+        } else if (typeof this.db !== 'undefined') {
+          this.db.run("COMMIT;");
+          resolve()
+          this.commitListeners.forEach(callback => callback())
+        }
+
+      } catch (error) {
+        reject(error)
+      }
+    })
   }
 }

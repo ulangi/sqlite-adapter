@@ -6,22 +6,23 @@ export class WebSQLite extends SQLiteAdapter {
 
   private initSql: typeof initSqlJs
   private sqlite?: SqlJsStatic
+  private workerScriptFile?: string
 
   public constructor(initSql: typeof initSqlJs) {
     super()
     this.initSql = initSql;
   }
 
-  public async init(config?: Partial<EmscriptenModule>): Promise<void> {
+  public async useDefault(config?: Partial<EmscriptenModule>): Promise<void> {
     this.sqlite = await this.initSql(config)
   }
 
+  public useWorker(workerScriptFile: string): void {
+    this.workerScriptFile = workerScriptFile
+  }
+
   public createDatabase(): WebSQLiteDatabase {
-    if (typeof this.sqlite !== 'undefined') {
-      return new WebSQLiteDatabase(this.sqlite);
-    } else {
-      throw new Error("Sql.js is not initialized. Please call init() first.")
-    }
+    return new WebSQLiteDatabase(this.sqlite, this.workerScriptFile);
   }
 }
 
