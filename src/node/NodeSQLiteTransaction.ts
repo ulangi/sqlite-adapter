@@ -1,7 +1,7 @@
 import type * as sqlite3 from "sqlite3"
-import { Transaction } from "./Transaction"
+import { Transaction } from "../core/Transaction"
 import { NodeSQLiteDatabase } from "./NodeSQLiteDatabase"
-import { Result } from "./Result"
+import { Result } from "../core/Result"
 
 export class NodeSQLiteTransaction extends Transaction {
 

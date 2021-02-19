@@ -27,6 +27,7 @@
     "semaphore": "^1.1.0"
   },
   "devDependencies": {
+    "@types/cordova-sqlite-storage": "^1.5.4",
     "@types/react-native-sqlite-storage": "^3.3.1",
     "@types/semaphore": "^1.1.1",
     "@types/sql.js": "^1.0.3",

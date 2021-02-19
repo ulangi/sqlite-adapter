@@ -1,5 +1,5 @@
 import { WebSQLiteDatabase, SqlJsStatic } from "./WebSQLiteDatabase"
-import { SQLiteAdapter } from "./SQLiteAdapter"
+import { SQLiteAdapter } from "../core/SQLiteAdapter"
 import type initSqlJs from "sql.js"
 
 export class WebSQLite extends SQLiteAdapter {

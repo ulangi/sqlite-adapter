@@ -1,6 +1,6 @@
 import type * as RNSQLite from "react-native-sqlite-storage"
-import { Transaction } from "./Transaction"
-import { Result } from "./Result"
+import { Transaction } from "../core/Transaction"
+import { Result } from "../core/Result"
 
 export class ReactNativeSQLiteTransaction extends Transaction {
 

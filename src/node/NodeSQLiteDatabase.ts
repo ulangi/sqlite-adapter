@@ -1,8 +1,8 @@
 import type * as sqlite3 from "sqlite3"
-import { SQLiteDatabase } from "./SQLiteDatabase"
+import { SQLiteDatabase } from "../core/SQLiteDatabase"
 import { NodeSQLiteTransaction } from "./NodeSQLiteTransaction"
-import { Transaction } from "./Transaction"
-import { Result } from "./Result"
+import { Transaction } from "../core/Transaction"
+import { Result } from "../core/Result"
 import * as semaphore from "semaphore"
 
 export class NodeSQLiteDatabase extends SQLiteDatabase {

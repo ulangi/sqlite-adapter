@@ -1,6 +1,6 @@
-import { Transaction } from "./Transaction"
+import { Transaction } from "../core/Transaction"
 import { WebSQLiteDatabase, SqlJsDatabase } from "./WebSQLiteDatabase"
-import { Result } from "./Result"
+import { Result } from "../core/Result"
 
 export class WebSQLiteTransaction extends Transaction {
 
